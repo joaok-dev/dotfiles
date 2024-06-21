@@ -1,0 +1,20 @@
+() {
+  local ZPLUGINDIR=/etc/zsh/plugins
+
+  apply() {
+    github=$1
+    plugin=$2
+    
+    if [ ! -d "${ZPLUGINDIR}/${plugin}" ]; then
+      echo "WARNING: ${plugin} not found. Installing..."
+      sudo git clone "https://www.github.com/${github}/${plugin}" "${ZPLUGINDIR}/${plugin}"
+      echo "SUCCESS: ${plugin} installed!"
+    fi
+    
+    source "${ZPLUGINDIR}/${plugin}/${plugin}.plugin.zsh"
+  }
+
+  apply zdharma-continuum fast-syntax-highlighting
+  apply zsh-users zsh-history-substring-search
+  apply zsh-users zsh-autosuggestions
+}

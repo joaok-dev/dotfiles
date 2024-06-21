@@ -1,0 +1,14 @@
+[user]
+    name = Joao Kennedy Oliveira
+    email = 112454984+joaok-dev@users.noreply.github.com
+
+[core]
+    editor = nvim
+    autocrlf = input
+
+[push]
+    default = simple
+
+[pull]
+    rebase = false
+

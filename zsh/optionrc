@@ -1,0 +1,55 @@
+# Enable auto-correct for commands
+setopt CORRECT_ALL           # Correct the spelling of all arguments in a line
+
+# Globbing and Parameter Expansion
+setopt EXTENDED_GLOB         # Extended globbing. Allows using regular expressions with *
+setopt NO_CASE_GLOB          # Case insensitive globbing
+setopt RC_EXPAND_PARAM       # Array expansion with parameters
+setopt NUMERIC_GLOB_SORT     # Sort filenames numerically when it makes sense
+
+# Shell Behavior
+setopt NO_CHECK_JOBS         # Don't warn about running processes when exiting
+unsetopt FLOW_CONTROL        # Disable annoying keys (Ctrl+S/Ctrl+Q)
+unsetopt NOMATCH             # Avoid 'zsh: no matches found...'
+unsetopt SHORT_LOOPS         # Disable short loop forms
+unsetopt BEEP                # No beep
+setopt NO_HUP                # Don't send SIGHUP to background processes when the shell exits
+setopt AUTO_RESUME           # Attempt to resume existing job before creating a new process
+setopt PUSHD_SILENT          # Do not print the directory stack after pushd or popd
+setopt PUSHD_IGNORE_DUPS     # Don't push the same dir twice
+setopt AUTO_PUSHD            # Make cd push the old directory onto the directory stack
+
+# History
+setopt APPEND_HISTORY        # Immediately append history instead of overwriting
+setopt INC_APPEND_HISTORY    # Save commands are added to the history immediately, otherwise only when shell exits
+setopt HIST_IGNORE_SPACE     # Don't save commands that start with space
+setopt HIST_IGNORE_ALL_DUPS  # If a new command is a duplicate, remove the older one
+setopt HIST_FIND_NO_DUPS     # Do not display a previously found event
+setopt HIST_VERIFY           # Do not execute immediately upon history expansion
+setopt HIST_REDUCE_BLANKS    # Trim multiple insignificant blanks in history
+setopt INC_APPEND_HISTORY_TIME  # History appends to existing file as soon as it's written
+
+# Directory Navigation
+setopt AUTO_CD               # If only directory path is entered, cd there
+setopt CDABLE_VARS           # Change directory to a path stored in a variable
+
+# Redirection and Expansion
+setopt CLOBBER               # Allow > redirection to truncate existing files
+setopt MULTIOS               # Allows multiple input and output redirections
+setopt BRACE_CCL             # Allow brace character class list expansion
+setopt NO_SH_WORD_SPLIT      # Use zsh style word splitting
+setopt RM_STAR_WAIT          # Wait for 10 seconds confirmation when running rm with *
+unsetopt RM_STAR_SILENT      # Notify when rm is running with *
+
+# Prompt and Completion
+setopt INTERACTIVE_COMMENTS  # Allow use of comments in interactive code
+setopt AUTO_PARAM_SLASH      # Complete folders with / at end
+setopt LIST_TYPES            # Mark type of completion suggestions
+setopt HASH_LIST_ALL         # Ensure the entire command path is hashed first
+setopt COMPLETE_IN_WORD      # Allow completion from within a word/phrase
+setopt ALWAYS_TO_END         # Move cursor to the end of a completed word
+
+# Job Control
+setopt LONG_LIST_JOBS        # Display PID when suspending processes as well
+setopt NOTIFY                # Report status of background jobs immediately
+

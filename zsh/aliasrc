@@ -1,0 +1,32 @@
+# Aliases Configuration
+
+# Enhanced 'ls' with eza for better listing format and icons
+alias ls='eza --long --header --icons --group-directories-first --group --git --all --links'
+
+# Use delta for better 'diff' visualization
+alias diff='delta'
+
+# Use bat as a cat replacement
+alias cat='bat --paging=never'
+
+# Default settings for bat
+alias bat='bat --style=numbers,changes,header --theme=TwoDark'
+
+# History suppression for clear, pwd, and exit commands
+alias clear=' clear'
+alias pwd=' pwd'
+alias exit=' exit'
+
+# Suppress suggestions and globbing for certain commands
+alias find='noglob find'
+alias touch='nocorrect touch'
+alias mkdir='nocorrect mkdir -pv'
+alias cp='nocorrect cp -i --verbose'
+alias fd='noglob fd'
+
+# General Aliases with color auto-enable and safer operations
+alias grep="grep --color=auto"
+alias diff="diff --color=auto"
+alias rm="rm -ri"
+alias mv="mv -i"
+alias vim="nvim"
