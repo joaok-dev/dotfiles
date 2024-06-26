@@ -1,0 +1,32 @@
+import = ["~/.config/alacritty/tokyonight_night.toml"]
+live_config_reload = true
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[font]
+size = 12.0
+
+[font.normal]
+family = "FiraCode Nerd Font"  
+style = "Regular"  
+
+[font.bold]
+family = "FiraCode Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "VictorMono Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "VictorMono Nerd Font"
+style = "Bold Italic"
+
+[window.padding]
+x = 14
+y = 14
+
+[window]
+startup_mode = "Maximized"
+
