@@ -14,7 +14,7 @@ local function get_git_root()
 end
 
 -- Set the working directory for text search based on the Git repository
-function live_grep_from_project_git_root()
+local function live_grep_from_project_git_root()
 	local opts = {}
 	if is_git_repo() then
 		local git_root = get_git_root()
@@ -30,7 +30,7 @@ function live_grep_from_project_git_root()
 end
 
 -- Set the working directory for file search based on the Git repository
-function find_files_from_project_git_root()
+local function find_files_from_project_git_root()
 	local opts = {}
 	if is_git_repo() then
 		local git_root = get_git_root()

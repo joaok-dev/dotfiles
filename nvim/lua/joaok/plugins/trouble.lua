@@ -26,23 +26,20 @@ return {
 		},
 	},
 	config = function()
-		map_key("n", "<leader>xx", function()
-			require("trouble").toggle()
-		end, "Toggle Trouble")
-		map_key("n", "<leader>xw", function()
-			require("trouble").toggle("workspace_diagnostics")
-		end, "Show Workspace Diagnostics")
-		map_key("n", "<leader>xd", function()
-			require("trouble").toggle("document_diagnostics")
-		end, "Show Document Diagnostics")
-		map_key("n", "<leader>xq", function()
-			require("trouble").toggle("quickfix")
-		end, "Toggle Quickfix List")
-		map_key("n", "<leader>xl", function()
-			require("trouble").toggle("loclist")
-		end, "Toggle Location List")
-		map_key("n", "gR", function()
-			require("trouble").toggle("lsp_references")
-		end, "Toggle LSP References")
+		-- Load the plugin
+		require("trouble").setup({})
+
+		-- Map the keybindings with correct commands
+		map_key("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", "Diagnostics (Trouble)")
+		map_key("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", "Buffer Diagnostics (Trouble)")
+		map_key("n", "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>", "Symbols (Trouble)")
+		map_key(
+			"n",
+			"<leader>cl",
+			"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+			"LSP Definitions / references / ... (Trouble)"
+		)
+		map_key("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "Location List (Trouble)")
+		map_key("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", "Quickfix List (Trouble)")
 	end,
 }
