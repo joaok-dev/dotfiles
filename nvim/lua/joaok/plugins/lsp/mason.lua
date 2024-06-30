@@ -1,54 +1,45 @@
+-- Mason Configuration
 return {
-  "williamboman/mason.nvim",
-  dependencies = {
-    "williamboman/mason-lspconfig.nvim",
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
-  },
-  config = function()
-    -- import mason
-    local mason = require("mason")
+	"williamboman/mason.nvim",
+	dependencies = {
+		"williamboman/mason-lspconfig.nvim",
+		"WhoIsSethDaniel/mason-tool-installer.nvim",
+	},
+	config = function()
+		-- Imports
+		local mason = require("mason")
+		local mason_lspconfig = require("mason-lspconfig")
+		local mason_tool_installer = require("mason-tool-installer")
 
-    -- import mason-lspconfig
-    local mason_lspconfig = require("mason-lspconfig")
+		-- Mason setup configuration
+		local mason_setup = {
+			ui = {
+				icons = {
+					package_installed = "✓",
+					package_pending = "➜",
+					package_uninstalled = "✗",
+				},
+			},
+		}
 
-    local mason_tool_installer = require("mason-tool-installer")
+		-- Mason-lspconfig setup to ensure LSP servers are installed
+		local mason_lspconfig_setup = {
+			ensure_installed = {
+				"lua_ls", -- Lua language server
+			},
+		}
 
-    -- enable mason and configure icons
-    mason.setup({
-      ui = {
-        icons = {
-          package_installed = "✓",
-          package_pending = "➜",
-          package_uninstalled = "✗",
-        },
-      },
-    })
+		-- Mason-tool-installer setup to ensure formatters, linters, and DAPs are installed
+		local mason_tool_installer_setup = {
+			ensure_installed = {
+				"stylua", -- Lua formatter
+				"shfmt", -- Shell script formatter
+				"shellcheck", -- Shell script linter
+			},
+		}
 
-    mason_lspconfig.setup({
-      -- list of servers for mason to install
-      ensure_installed = {
-        "tsserver",
-        "html",
-        "cssls",
-        "tailwindcss",
-        "svelte",
-        "lua_ls",
-        "graphql",
-        "emmet_ls",
-        "prismals",
-        "pyright",
-      },
-    })
-
-    mason_tool_installer.setup({
-      ensure_installed = {
-        "prettier", -- prettier formatter
-        "stylua", -- lua formatter
-        "isort", -- python formatter
-        "black", -- python formatter
-        "pylint",
-        "eslint_d",
-      },
-    })
-  end,
+		mason.setup(mason_setup)
+		mason_lspconfig.setup(mason_lspconfig_setup)
+		mason_tool_installer.setup(mason_tool_installer_setup)
+	end,
 }
