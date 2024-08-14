@@ -1,0 +1,21 @@
+return {
+  --   "SmiteshP/nvim-navic",
+  --   dependencies = { "LunarVim/breadcrumbs.nvim" },
+  --   opts = function()
+  --     local icons = require("util.icons")
+  --     return {
+  --       icons = icons.kinds,
+  --       highlight = true,
+  --       lsp = {
+  --         auto_attach = true,
+  --         preference = {
+  --           "templ",
+  --         },
+  --       },
+  --       click = true,
+  --       separator = " " .. icons.ui.ChevronRight .. " ",
+  --       depth_limit = 0,
+  --       depth_limit_indicator = "..",
+  --     }
+  --   end,
+}
