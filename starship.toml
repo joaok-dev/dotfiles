@@ -1,19 +1,173 @@
 # Don't print a new line at the start of the prompt
 add_newline = false
 
-# Charakter config
+# Set user-defined palette
+# palette = "tokyo_night_night"
+
+# Character config
 [character]
 format = "$symbol"
-success_symbol = "[󰁕 ](bold green)"
-error_symbol = "[✗ ](bold red) "
-vicmd_symbol = "[󰁎 ](bold green)"
+success_symbol = "[󰁕 ](green)"
+error_symbol = "[✗ ](red)"
+vicmd_symbol = "[󰁎 ](blue)"
 disabled = false
 
-# Username settings
-[username]
-show_always = true
-style_root = "bold red"
-style_user = "bold yellow"
-format = "[$user]($style) "
-disabled = false
+# Define other Starship modules here as needed
 
+# # Palette table should be last in the config
+[palettes.tokyo_night_night]
+# Base colors
+bg0_hard = "#1a1b26"
+bg0 = "#1a1b26"
+bg1 = "#16161e"
+bg2 = "#292e42"
+bg3 = "#414868"
+bg4 = "#545c7e"
+
+fg0 = "#c0caf5"
+fg1 = "#c0caf5"
+fg2 = "#a9b1d6"
+fg3 = "#7aa2f7"
+fg4 = "#7dcfff"
+
+# Normal colors
+gray = "#15161e"
+red = "#f7768e"
+green = "#9ece6a"
+yellow = "#e0af68"
+blue = "#7aa2f7"
+purple = "#bb9af7"
+aqua = "#7dcfff"
+orange = "#ff9e64"
+
+# Bright colors
+bright_red = "#f7768e"
+bright_green = "#9ece6a"
+bright_yellow = "#e0af68"
+bright_blue = "#7aa2f7"
+bright_purple = "#bb9af7"
+bright_aqua = "#7dcfff"
+bright_orange = "#ff9e64"
+
+# Neutral colors
+neutral_red = "#f7768e"
+neutral_green = "#9ece6a"
+neutral_yellow = "#e0af68"
+neutral_blue = "#7aa2f7"
+neutral_purple = "#bb9af7"
+neutral_aqua = "#7dcfff"
+neutral_orange = "#ff9e64"
+
+# Faded colors
+faded_red = "#f7768e"
+faded_green = "#9ece6a"
+faded_yellow = "#e0af68"
+faded_blue = "#7aa2f7"
+faded_purple = "#bb9af7"
+faded_aqua = "#7dcfff"
+faded_orange = "#ff9e64"
+
+[palettes.gruvbox_dark_high_contrast]
+# Base colors
+bg0_hard = "#1d2021"
+bg0 = "#282828"
+bg1 = "#3c3836"
+bg2 = "#504945"
+bg3 = "#665c54"
+bg4 = "#7c6f64"
+
+fg0 = "#fbf1c7"
+fg1 = "#ebdbb2"
+fg2 = "#d5c4a1"
+fg3 = "#bdae93"
+fg4 = "#a89984"
+
+# Normal colors
+gray = "#928374"
+red = "#fb4934"
+green = "#b8bb26"
+yellow = "#fabd2f"
+blue = "#83a598"
+purple = "#d3869b"
+aqua = "#8ec07c"
+orange = "#fe8019"
+
+# Bright colors
+bright_red = "#fb4934"
+bright_green = "#b8bb26"
+bright_yellow = "#fabd2f"
+bright_blue = "#83a598"
+bright_purple = "#d3869b"
+bright_aqua = "#8ec07c"
+bright_orange = "#fe8019"
+
+# Neutral colors
+neutral_red = "#cc241d"
+neutral_green = "#98971a"
+neutral_yellow = "#d79921"
+neutral_blue = "#458588"
+neutral_purple = "#b16286"
+neutral_aqua = "#689d6a"
+neutral_orange = "#d65d0e"
+
+# Faded colors
+faded_red = "#9d0006"
+faded_green = "#79740e"
+faded_yellow = "#b57614"
+faded_blue = "#076678"
+faded_purple = "#8f3f71"
+faded_aqua = "#427b58"
+faded_orange = "#af3a03"
+
+[palettes.oxocarbon_dark]
+# Base colors
+bg0_hard = "#161616"
+bg0 = "#161616"
+bg1 = "#262626"
+bg2 = "#393939"
+bg3 = "#525252"
+bg4 = "#dde1e6"
+
+fg0 = "#f2f4f8"
+fg1 = "#f2f4f8"
+fg2 = "#dde1e6"
+fg3 = "#08bdba"
+fg4 = "#3ddbd9"
+
+# Normal colors
+gray = "#262626"
+red = "#ee5396"
+green = "#42be65"
+yellow = "#33b1ff"
+blue = "#78a9ff"
+purple = "#be95ff"
+aqua = "#3ddbd9"
+orange = "#82cfff"
+
+# Bright colors
+bright_red = "#ee5396"
+bright_green = "#42be65"
+bright_yellow = "#33b1ff"
+bright_blue = "#78a9ff"
+bright_purple = "#be95ff"
+bright_aqua = "#3ddbd9"
+bright_orange = "#82cfff"
+bright_gray = "#393939"
+
+# Neutral colors
+neutral_red = "#ee5396"
+neutral_green = "#42be65"
+neutral_yellow = "#33b1ff"
+neutral_blue = "#78a9ff"
+neutral_purple = "#be95ff"
+neutral_aqua = "#3ddbd9"
+neutral_orange = "#82cfff"
+
+# Faded colors
+faded_red = "#ee5396"
+faded_green = "#42be65"
+faded_yellow = "#33b1ff"
+faded_blue = "#78a9ff"
+faded_purple = "#be95ff"
+faded_aqua = "#3ddbd9"
+faded_orange = "#82cfff"

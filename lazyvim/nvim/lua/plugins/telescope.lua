@@ -80,7 +80,7 @@ return {
       },
       buffers = {
         theme = "dropdown",
-        previewer = false,
+        previewer = true,
         initial_mode = "normal",
         mappings = {
           i = {

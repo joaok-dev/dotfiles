@@ -45,10 +45,9 @@ return {
       },
       servers = {
         lua_ls = {
-          -- mason = false, -- set to false if you don't want this server to be installed with mason
-          -- Use this to add any additional keymaps
-          -- for specific lsp servers
-          -- ---@type LazyKeysSpec[]
+          -- mason = false, -- set to false if you don't want this server
+          -- to be installed with mason
+          -- Use this to add any additional keymaps for specific lsp servers
           -- keys = {},
           settings = {
             Lua = {
@@ -78,7 +77,6 @@ return {
       },
       -- you can do any additional lsp server setup here
       -- return true if you don't want this server to be setup with lspconfig
-      ---@type table<string, fun(server:string, opts:_.lspconfig.options):boolean?>
       setup = {
         -- example to setup with typescript.nvim
         -- tsserver = function(_, opts)
@@ -89,5 +87,9 @@ return {
         -- ["*"] = function(server, opts) end,
       },
     }
+  end,
+  config = function(_, _)
+    -- UI implementation
+    require("util").customize_lsp_popups()
   end,
 }

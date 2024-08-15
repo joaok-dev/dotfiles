@@ -7,3 +7,6 @@ vim.opt.tabstop = 4 -- Number of spaces that a <Tab> in the file counts for
 
 -- Telescope
 vim.g.lazyvim_picker = "telescope"
+
+-- Autoformat
+vim.g.autoformat = false

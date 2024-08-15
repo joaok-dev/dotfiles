@@ -10,12 +10,9 @@ return {
     local icons = require("util.icons").diagnostics
     local diagnostics = {
       "diagnostics",
-      symbols = {
-        error = icons.Error,
-        warn = icons.Warning,
-        info = icons.Information,
-        hint = icons.Hint,
-      },
+      sections = { "error", "warn" },
+      colored = false,
+      always_visible = true,
     }
 
     return {
@@ -26,12 +23,12 @@ return {
       },
       sections = {
         lualine_a = {
-          --   {
-          --     "mode",
-          --     fmt = function(str)
-          --       return str:sub(1, 3)
-          --     end,
-          --   },
+          {
+            "mode",
+            fmt = function(str)
+              return str:sub(1, 3)
+            end,
+          },
         },
         lualine_b = { "branch" },
         lualine_c = {
@@ -39,7 +36,7 @@ return {
           {
             "filename",
             path = 3,
-            padding = { left = 2, right = 0 },
+            padding = { left = 4, right = 0 },
           },
         },
         lualine_x = {
