@@ -4,11 +4,11 @@ return {
     enabled = false,
   },
   {
-    "lukas-reineke/indent-blankline.nvim",
+    "akinsho/bufferline.nvim",
     enabled = false,
   },
   {
-    "akinsho/bufferline.nvim",
+    "folke/flash.nvim",
     enabled = false,
   },
 }

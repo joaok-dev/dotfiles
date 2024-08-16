@@ -15,3 +15,53 @@ vim.api.nvim_create_autocmd({ "InsertEnter", "WinLeave" }, {
     end
   end,
 })
+
+-- Set language-specific colorcolumn based on file type
+vim.api.nvim_create_autocmd("FileType", {
+  callback = function()
+    local filetype = vim.bo.filetype
+    local col_widths = {
+      c = 80,
+      cpp = 80,
+      h = 80,
+      python = 88,
+      javascript = 80,
+      typescript = 80,
+      jsx = 80,
+      tsx = 80,
+      rust = 100,
+      go = 120,
+      ruby = 80,
+      php = 120,
+      lua = 120,
+    }
+
+    vim.opt_local.colorcolumn = tostring(col_widths[filetype] or "")
+  end,
+})
+
+-- Disable autoformat for specific filetype
+vim.api.nvim_create_autocmd({ "FileType" }, {
+  pattern = {
+    -- C-family
+    "c",
+    "cpp",
+    "h",
+    "hpp",
+  },
+  callback = function()
+    vim.b.autoformat = false
+  end,
+})
+
+-- Set specific indentation for C-family files
+vim.api.nvim_create_autocmd({"FileType"}, {
+  pattern = {"c", "cpp", "h", "hpp"},
+  callback = function()
+    vim.opt_local.smartindent = true
+    vim.opt_local.expandtab = false
+    vim.opt_local.shiftwidth = 4
+    vim.opt_local.softtabstop = 4
+    vim.opt_local.tabstop = 4
+  end,
+})

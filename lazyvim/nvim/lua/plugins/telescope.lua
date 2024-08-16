@@ -62,7 +62,6 @@ return {
       },
       find_files = {
         theme = "dropdown",
-        previewer = false,
         path_display = { "filenameFirst" },
         find_command = function()
           if 1 == vim.fn.executable("rg") then

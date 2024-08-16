@@ -1,5 +1,6 @@
 local M = {}
 
+-- Notifies "Hold it Cowboy!" if certain keys are pressed 10 times quickly.
 function M.cowboy()
   ---@type table?
   local id
