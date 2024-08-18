@@ -1,101 +1,140 @@
--- Check if the current directory is a Git repository
-local function is_git_repo()
-	vim.fn.system("git rev-parse --is-inside-work-tree")
-	return vim.v.shell_error == 0
-end
-
--- Get the root directory of the Git repository, if it exists
-local function get_git_root()
-	local dot_git_path = vim.fn.finddir(".git", vim.loop.cwd() .. ";")
-	if dot_git_path == "" then
-		return nil
-	end
-	return vim.fn.fnamemodify(dot_git_path, ":h")
-end
-
--- Set the working directory for text search based on the Git repository
-local function live_grep_from_project_git_root()
-	local opts = {}
-	if is_git_repo() then
-		local git_root = get_git_root()
-		if git_root then
-			opts.cwd = git_root
-		else
-			opts.cwd = vim.loop.cwd()
+-- Helper functions (moved outside for modularity)
+local helpers = {
+	create_picker = function(picker, opts)
+		return function()
+			opts = opts or {}
+			opts.cwd = JoaoK.get_root()
+			require("telescope.builtin")[picker](opts)
 		end
-	else
-		opts.cwd = vim.loop.cwd()
-	end
-	require("telescope.builtin").live_grep(opts)
-end
-
--- Set the working directory for file search based on the Git repository
-local function find_files_from_project_git_root()
-	local opts = {}
-	if is_git_repo() then
-		local git_root = get_git_root()
-		if git_root then
-			opts.cwd = git_root
-		else
-			opts.cwd = vim.loop.cwd()
-		end
-	else
-		opts.cwd = vim.loop.cwd()
-	end
-	require("telescope.builtin").find_files(opts)
-end
-
-local keys = {
-	{ "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Buffer search" },
-	{ "<leader>fk", "<cmd>Telescope keymaps<CR>", desc = "Show Keymaps" },
-	{ "<leader>fh", "<cmd>Telescope help_tags<CR>", desc = "Show Help Tags" },
-	{ "<leader>ff", find_files_from_project_git_root, desc = "Find Files in Project" },
-	{ "<leader>fg", live_grep_from_project_git_root, desc = "Live Grep in Project" },
-	{ "<leader>fb", "<cmd>Telescope buffers<CR>", desc = "Find Buffers" },
+	end,
 }
 
-local config = function()
-	local telescope = require("telescope")
-
-	telescope.setup({
-		defaults = {
-			mappings = {
-				i = {
-					["<C-j>"] = "move_selection_next", -- Move selection down in insert mode
-					["<C-k>"] = "move_selection_previous", -- Move selection up in insert mode
-				},
-			},
-		},
-		pickers = {
-			find_files = {
-				find_command = { "rg", "--files", "--hidden", "--glob", "!**/.git/*" },
-				file_ignore_patterns = { "node_modules", ".venv" }, -- Ignore these directories
-			},
-			live_grep = {
-				file_ignore_patterns = { "node_modules", ".venv" }, -- Ignore these directories
-				additional_args = function(_)
-					return { "--hidden", "--no-ignore-vcs" } -- Include hidden files and no VCS ignore
-				end,
-			},
-		},
-		extensions = {
-			"fzf", -- Load the fzf extension for Telescope
-		},
-	})
-
-	telescope.load_extension("fzf")
+-- Memoization for file_name_first function
+local file_name_cache = {}
+local function file_name_first(_, path)
+	if file_name_cache[path] then
+		return file_name_cache[path]
+	end
+	local tail = vim.fs.basename(path)
+	local parent = vim.fs.dirname(path)
+	local result = parent == "." and tail or string.format("%s\t\t%s", tail, parent)
+	file_name_cache[path] = result
+	return result
 end
 
 return {
-	"nvim-telescope/telescope.nvim", -- Main Telescope plugin
-	dependencies = {
-		{ "nvim-lua/plenary.nvim" }, -- Dependency required by Telescope
-		{
-			"nvim-telescope/telescope-fzf-native.nvim", -- fzf-native extension for Telescope
-			build = "make", -- Build command for the fzf-native extension
+	{
+		-- Telescope: Fuzzy finder
+		"nvim-telescope/telescope.nvim",
+		cmd = "Telescope",
+		version = false,
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		},
-		{ "nvim-tree/nvim-web-devicons" },
+		keys = function()
+			return {
+				{ "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Buffer search" },
+				{ "<leader>fk", "<cmd>Telescope keymaps<CR>", desc = "Show keymaps" },
+				{ "<leader>fh", "<cmd>Telescope help_tags<CR>", desc = "Show help tags" },
+				{ "<leader>ff", helpers.create_picker("find_files"), desc = "Find files in project" },
+				{ "<leader>fg", helpers.create_picker("live_grep"), desc = "Live grep in project" },
+				{ "<leader>fb", "<cmd>Telescope buffers<CR>", desc = "Find buffers" },
+			}
+		end,
+		opts = function()
+			local actions = require("telescope.actions")
+			local icons = JoaoK.icons
+
+			-- Function to determine the best file finder command
+			local function find_command()
+				local commands = {
+					{ "rg", "--files", "--hidden", "--color", "never", "-g", "!.git" },
+					{ "fd", "--type", "f", "--hidden", "--color", "never", "-E", ".git" },
+					{ "fdfind", "--type", "f", "--hidden", "--color", "never", "-E", ".git" },
+					{ "find", ".", "-type", "f" },
+					{ "where", "/r", ".", "*" },
+				}
+				for _, cmd in ipairs(commands) do
+					if vim.fn.executable(cmd[1]) == 1 then
+						return cmd
+					end
+				end
+				vim.notify("No suitable find command found. Falling back to Telescope's default.", vim.log.levels.WARN)
+				return nil -- Fallback: let Telescope use its default
+			end
+
+			local ignore_patterns = { "node_modules", ".venv" }
+
+			return {
+				defaults = {
+					prompt_prefix = icons.ui.Telescope .. " ",
+					selection_caret = icons.ui.Forward .. "  ",
+					initial_mode = "insert",
+					mappings = {
+						i = {
+							["<C-n>"] = actions.cycle_history_next,
+							["<C-p>"] = actions.cycle_history_prev,
+							["<C-j>"] = actions.move_selection_next,
+							["<C-k>"] = actions.move_selection_previous,
+						},
+						n = {
+							["<esc>"] = actions.close,
+							["j"] = actions.move_selection_next,
+							["k"] = actions.move_selection_previous,
+							["q"] = actions.close,
+						},
+					},
+				},
+				pickers = {
+					find_files = {
+						theme = "dropdown",
+						previewer = false,
+						find_command = find_command(),
+						path_display = file_name_first,
+						file_ignore_patterns = ignore_patterns,
+					},
+					live_grep = {
+						theme = "dropdown",
+						find_command = find_command(),
+						file_ignore_patterns = ignore_patterns,
+					},
+					buffers = {
+						theme = "dropdown",
+						previewer = false,
+						mappings = {
+							i = { ["<C-d>"] = actions.delete_buffer },
+							n = { ["dd"] = actions.delete_buffer },
+						},
+					},
+					lsp_references = { theme = "dropdown" },
+					lsp_definitions = { theme = "dropdown" },
+					lsp_declarations = { theme = "dropdown" },
+					lsp_implementations = { theme = "dropdown" },
+				},
+			}
+		end,
+		config = function(_, opts)
+			require("telescope").setup(opts)
+			require("telescope").load_extension("fzf")
+		end,
 	},
-	keys = keys, -- Key mappings defined above
-	config = config, -- Configuration function defined above
+
+	-- Dressing: Better vim.ui with telescope
+	{
+		"stevearc/dressing.nvim",
+		lazy = true,
+		init = function()
+			---@diagnostic disable-next-line: duplicate-set-field
+			vim.ui.select = function(...)
+				require("lazy").load({ plugins = { "dressing.nvim" } })
+				return vim.ui.select(...)
+			end
+			---@diagnostic disable-next-line: duplicate-set-field
+			vim.ui.input = function(...)
+				require("lazy").load({ plugins = { "dressing.nvim" } })
+				return vim.ui.input(...)
+			end
+		end,
+	},
 }

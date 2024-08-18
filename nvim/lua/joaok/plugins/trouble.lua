@@ -1,45 +1,48 @@
--- Define diagnostic signs
-local diagnostic_signs = {
-	Error = " ",
-	Warn = " ",
-	Hint = "",
-	Info = "",
-}
-
--- Define key mappings
-local function map_key(mode, lhs, rhs, desc)
-	vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
-end
-
--- Main plugin configuration
 return {
+	-- Trouble
 	"folke/trouble.nvim",
-	dependencies = { "nvim-tree/nvim-web-devicons" },
+	cmd = { "Trouble" },
 	opts = {
-		signs = {
-			-- Icons / text used for diagnostics
-			error = diagnostic_signs.Error,
-			warning = diagnostic_signs.Warn,
-			hint = diagnostic_signs.Hint,
-			information = diagnostic_signs.Info,
-			other = diagnostic_signs.Info,
+		modes = {
+			lsp = {
+				win = { position = "right" },
+			},
 		},
 	},
-	config = function()
-		-- Load the plugin
-		require("trouble").setup({})
-
-		-- Map the keybindings with correct commands
-		map_key("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", "Diagnostics (Trouble)")
-		map_key("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", "Buffer Diagnostics (Trouble)")
-		map_key("n", "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>", "Symbols (Trouble)")
-		map_key(
-			"n",
-			"<leader>cl",
-			"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-			"LSP Definitions / references / ... (Trouble)"
-		)
-		map_key("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "Location List (Trouble)")
-		map_key("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", "Quickfix List (Trouble)")
-	end,
+	keys = {
+		{ "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
+		{ "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics (Trouble)" },
+		{ "<leader>cs", "<cmd>Trouble symbols toggle<cr>", desc = "Symbols (Trouble)" },
+		{ "<leader>cS", "<cmd>Trouble lsp toggle<cr>", desc = "LSP references/definitions/... (Trouble)" },
+		{ "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
+		{ "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
+		{
+			"[q",
+			function()
+				if require("trouble").is_open() then
+					require("trouble").prev({ skip_groups = true, jump = true })
+				else
+					local ok, err = pcall(vim.cmd.cprev)
+					if not ok then
+						vim.notify(err, vim.log.levels.ERROR)
+					end
+				end
+			end,
+			desc = "Previous Trouble/Quickfix Item",
+		},
+		{
+			"]q",
+			function()
+				if require("trouble").is_open() then
+					require("trouble").next({ skip_groups = true, jump = true })
+				else
+					local ok, err = pcall(vim.cmd.cnext)
+					if not ok then
+						vim.notify(err, vim.log.levels.ERROR)
+					end
+				end
+			end,
+			desc = "Next Trouble/Quickfix Item",
+		},
+	},
 }

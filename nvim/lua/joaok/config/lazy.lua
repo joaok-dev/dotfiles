@@ -1,3 +1,4 @@
+-- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -14,25 +15,27 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup({
+-- Setup lazy.nvim
+require("lazy").setup({	
+  -- Load plugins configuration
   spec = {
-    { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    { import = "lazyvim.plugins.extras.editor.telescope" },
-    { import = "lazyvim.plugins.extras.editor.navic" },
-    { import = "plugins" },
+	  { import = "joaok.plugins" },
+	  -- { import = "joaok.plugins.lsp" },
   },
   defaults = {
-    lazy = false,
+    lazy = true,
     version = false,
   },
-  install = { colorscheme = { "tokyonight", "habamax" } },
+  install = { colorscheme = { "default "} },
+  ui = { 
+	  border = "rounded", 
+  },
   checker = {
     enabled = true,
     notify = false,
   },
   performance = {
     rtp = {
-      -- disable some rtp plugins
       disabled_plugins = {
         "gzip",
         -- "matchit",
