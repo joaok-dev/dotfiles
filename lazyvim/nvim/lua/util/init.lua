@@ -36,10 +36,51 @@ function M.cowboy()
   end
 end
 
-function M.customize_lsp_popups()
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
-  require("lspconfig.ui.windows").default_options.border = "rounded"
+-- =====================
+-- Telescope Helpers
+-- =====================
+
+-- Cache for root directories
+M.cache = {}
+
+--- Returns the real path of a given file or directory.
+--- @param path string: The file or directory path.
+--- @return string|nil: The normalized real path, or nil if the path is empty or nil.
+function M.realpath(path)
+	if path == "" or path == nil then
+		return nil
+	end
+	return vim.fs.normalize(vim.uv.fs_realpath(path) or path)
 end
+
+--- Gets the root directory of the current buffer or the provided buffer.
+--- The root is determined by finding the nearest .git directory.
+--- @param buf number|nil: The buffer number (optional, defaults to the current buffer).
+--- @return string: The root directory path.
+function M.get_root(buf)
+  buf = buf or vim.api.nvim_get_current_buf()
+  if not M.cache[buf] then
+    local path = M.realpath(vim.api.nvim_buf_get_name(buf))
+    local git_dir = vim.fs.find(".git", { path = path, upward = true })[1]
+    M.cache[buf] = git_dir and vim.fn.fnamemodify(git_dir, ":h") or vim.uv.cwd()
+  end
+  return M.cache[buf]
+end
+
+--- Retrieves the root directory of the current Git repository.
+--- @return string: The Git root directory path.
+function M.git_root()
+  local root = M.get_root()
+  local git_root = vim.fs.find(".git", { path = root, upward = true })[1]
+  return git_root and vim.fn.fnamemodify(git_root, ":h") or root
+end
+
+-------------
+
+-- function M.customize_lsp_popups()
+--   vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+--   vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
+--   require("lspconfig.ui.windows").default_options.border = "rounded"
+-- end
 
 return M

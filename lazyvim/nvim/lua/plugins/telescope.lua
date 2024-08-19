@@ -1,3 +1,27 @@
+-- Helper function
+local helpers = {
+  create_picker = function(picker, opts)
+    return function()
+      opts = opts or {}
+      opts.cwd = require("util").get_root()
+      require("telescope.builtin")[picker](opts)
+    end
+  end,
+}
+
+-- Memoization for file_name_first function
+local file_name_cache = {}
+local function file_name_first(_, path)
+  if file_name_cache[path] then
+    return file_name_cache[path]
+  end
+  local tail = vim.fs.basename(path)
+  local parent = vim.fs.dirname(path)
+  local result = parent == "." and tail or string.format("%s\t\t%s", tail, parent)
+  file_name_cache[path] = result
+  return result
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   dependencies = { "nvim-telescope/telescope-fzf-native.nvim" },
@@ -8,35 +32,37 @@ return {
   keys = {
     { "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Grep Buffer" },
     { "<leader>fF", LazyVim.pick("files"), desc = "Find Files (Root Dir)" },
-    { "<leader>ff", LazyVim.pick("files", { root = false }), desc = "Find Files (cwd)" },
+    { "<leader>ff", helpers.create_picker("find_files"), desc = "Find Files (cwd)" },
+    { "<leader>sg", helpers.create_picker("live_grep"), desc = "Live grep in project" },
   },
   opts = function()
     local icons = require("util.icons")
     local actions = require("telescope.actions")
 
+    -- Function to determine the best file finder command
+    local function find_command()
+      local commands = {
+        { "rg", "--files", "--hidden", "--color", "never", "-g", "!.git" },
+        { "fd", "--type", "f", "--hidden", "--color", "never", "-E", ".git" },
+        { "fdfind", "--type", "f", "--hidden", "--color", "never", "-E", ".git" },
+        { "find", ".", "-type", "f" },
+        { "where", "/r", ".", "*" },
+      }
+      for _, cmd in ipairs(commands) do
+        if vim.fn.executable(cmd[1]) == 1 then
+          return cmd
+        end
+      end
+      vim.notify("No suitable find command found. Falling back to Telescope's default.", vim.log.levels.WARN)
+      return nil -- Fallback: let Telescope use its default
+    end
+
+    local ignore_patterns = { "node_modules", ".venv" }
+
     local defaults = {
       prompt_prefix = icons.ui.Telescope .. " ",
       selection_caret = icons.ui.Forward .. "  ",
-      entry_prefix = "   ",
       initial_mode = "insert",
-      selection_strategy = "reset",
-      path_display = { "smart" },
-      color_devicons = true,
-      set_env = { ["COLORTERM"] = "truecolor" },
-      sorting_strategy = nil,
-      layout_strategy = nil,
-      layout_config = {},
-      vimgrep_arguments = {
-        "rg",
-        "--color=never",
-        "--no-heading",
-        "--with-filename",
-        "--line-number",
-        "--column",
-        "--smart-case",
-        -- "--hidden",
-        "--glob=!.git/",
-      },
       mappings = {
         i = {
           ["<C-n>"] = actions.cycle_history_next,
@@ -56,38 +82,24 @@ return {
     local pickers = {
       live_grep = {
         theme = "dropdown",
+        find_command = find_command(),
+        file_ignore_patterns = ignore_patterns,
       },
       grep_string = {
         theme = "dropdown",
       },
       find_files = {
         theme = "dropdown",
-        path_display = { "filenameFirst" },
-        find_command = function()
-          if 1 == vim.fn.executable("rg") then
-            return { "rg", "--files", "--color", "never", "-g", "!.git" }
-          elseif 1 == vim.fn.executable("fd") then
-            return { "fd", "--type", "f", "--color", "never", "-E", ".git" }
-          elseif 1 == vim.fn.executable("fdfind") then
-            return { "fdfind", "--type", "f", "--color", "never", "-E", ".git" }
-          elseif 1 == vim.fn.executable("find") and vim.fn.has("win32") == 0 then
-            return { "find", ".", "-type", "f" }
-          elseif 1 == vim.fn.executable("where") then
-            return { "where", "/r", ".", "*" }
-          end
-        end,
+        find_command = find_command(),
+        path_display = file_name_first,
       },
       buffers = {
         theme = "dropdown",
         previewer = true,
         initial_mode = "normal",
         mappings = {
-          i = {
-            ["<C-d>"] = actions.delete_buffer,
-          },
-          n = {
-            ["dd"] = actions.delete_buffer,
-          },
+          i = { ["<C-d>"] = actions.delete_buffer },
+          n = { ["dd"] = actions.delete_buffer },
         },
       },
       planets = {
