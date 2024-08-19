@@ -1,28 +1,23 @@
--- Set colorscheme
-local function set_colorscheme()
-	local colorscheme = "defaultplus" -- << Name of colorscheme <<
-	vim.cmd.colorscheme(colorscheme)
+function ColorMyPencils(color)
+  color = color or "default"
+  vim.cmd.colorscheme(color)
+
+  vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
 end
 
 return {
-	-- Defaultplus
-	{
-		"ChristianChiarulli/defaultplus",
-		lazy = false,
-		priority = 1000,
-	},
-
-	-- Darkplus
-	{ "lunarvim/darkplus.nvim" },
-
-	-- Tokyonight
-	{
-		"folke/tokyonight.nvim",
-		opts = { style = "night" },
-	},
-
-	-- Set the colorscheme after plugins are loaded
-	config = function()
-		vim.schedule(set_colorscheme)
-	end,
+  {
+    "joaok-dev/defaultplus",
+    lazy = false,
+    name = "defaultplus",
+    config = function()
+      local styles = {
+        comments = { italic = false },
+        keywords = { italic = false },
+      }
+      ColorMyPencils()
+    end,
+  },
 }
+

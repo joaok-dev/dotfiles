@@ -1,4 +1,5 @@
 return {
+	-- Trouble
 	"folke/trouble.nvim",
 	cmd = { "Trouble" },
 	opts = {
