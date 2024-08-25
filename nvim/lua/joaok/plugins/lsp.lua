@@ -1,123 +1,212 @@
-local M = {}
-
-M._keys = {
-	{ "<leader>cl", "<cmd>LspInfo<cr>", desc = "Lsp Info" },
-	{ "gd", "<cmd>Lspsaga goto_definition<CR>", desc = "Goto Definition" },
-	{ "gr", "<cmd>Lspsaga finder<CR>", desc = "References" },
-	{ "gI", "<cmd>Lspsaga finder imp<CR>", desc = "Goto Implementation" },
-	{ "gD", vim.lsp.buf.declaration, desc = "Goto Declaration" }, -- Lspsaga doesn't have a direct equivalent
-	{ "K", "<cmd>Lspsaga hover_doc<CR>", desc = "Hover" },
-	{ "gK", "<cmd>Lspsaga hover_doc ++keep<CR>", desc = "Signature Help" },
-	{ "<leader>ca", "<cmd>Lspsaga code_action<CR>", desc = "Code Action", mode = { "n", "v" } },
-	{ "<leader>cp", "<cmd>Lspsaga peek_definition<CR>", desc = "Peek Definition" },
-	{ "<leader>ci", "<cmd>Lspsaga incoming_calls<CR>", desc = "Incoming Calls" },
-	{ "<leader>co", "<cmd>Lspsaga outgoing_calls<CR>", desc = "Outgoing Calls" },
-	{ "<leader>cr", "<cmd>Lspsaga rename<CR>", desc = "Rename" },
-	{ "<leader>cd", "<cmd>Lspsaga show_cursor_diagnostics<CR>", desc = "Cursor Diagnostics" },
-	{ "[d", "<cmd>Lspsaga diagnostic_jump_prev<CR>", desc = "Previous Diagnostic" },
-	{ "]d", "<cmd>Lspsaga diagnostic_jump_next<CR>", desc = "Next Diagnostic" },
-	{ "<leader>cl", "<cmd>Lspsaga show_line_diagnostics<CR>", desc = "Line Diagnostics" },
-	{ "<leader>cw", "<cmd>Lspsaga show_workspace_diagnostics<CR>", desc = "Workspace Diagnostics" },
-	{ "<leader>co", "<cmd>Lspsaga outline<CR>", desc = "Code Outline" },
-}
-
--- Function to set up keymaps
-local function setup_keymaps(client, bufnr)
-	for _, map in ipairs(M._keys) do
-		local lhs, rhs, opts = map[1], map[2], { buffer = bufnr, desc = map.desc }
-
-		-- Remove mode from opts if it exists
-		local mode = map.mode or "n"
-		opts.mode = nil
-
-		vim.keymap.set(mode, lhs, rhs, opts)
-	end
-end
-
--- Main LSP configuration
 return {
-	"neovim/nvim-lspconfig",
-	dependencies = {
+	-- Mason and related plugins
+	{
 		"williamboman/mason.nvim",
-		"williamboman/mason-lspconfig.nvim",
-		"WhoIsSethDaniel/mason-tool-installer.nvim",
+		dependencies = {
+			"WhoIsSethDaniel/mason-tool-installer.nvim",
+		},
+		cmd = "Mason",
+		keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
+		build = ":MasonUpdate",
+		opts = {
+			ui = {
+				icons = {
+					package_installed = "✓",
+					package_pending = "➜",
+					package_uninstalled = "✗",
+				},
+			},
+		},
+		config = function(_, opts)
+			require("mason").setup(opts)
+
+			require("mason-tool-installer").setup({
+				ensure_installed = {
+					"luacheck",
+					"stylua",
+					"pyright",
+					"ruff",
+					"ruff-lsp",
+				},
+				auto_update = true,
+				run_on_start = true,
+			})
+		end,
 	},
-	opts = function()
-		return {
-			diagnostics = {
+
+	-- LSP Configuration
+	{
+		"neovim/nvim-lspconfig",
+		event = { "BufReadPost", "BufNewFile", "BufWritePre" },
+		dependencies = {
+			{ "j-hui/fidget.nvim", opts = {} },
+			"williamboman/mason-lspconfig.nvim",
+		},
+		config = function()
+			local icons = {
+				Error = " ",
+				Warning = " ",
+				Hint = "󰌶",
+				Information = " ",
+			}
+
+			vim.diagnostic.config({
+				signs = {
+					text = {
+						[vim.diagnostic.severity.ERROR] = icons.Error,
+						[vim.diagnostic.severity.WARN] = icons.Warning,
+						[vim.diagnostic.severity.HINT] = icons.Hint,
+						[vim.diagnostic.severity.INFO] = icons.Information,
+					},
+				},
 				virtual_text = true,
-				virtual_lines = false,
+				update_in_insert = false,
+				underline = true,
 				severity_sort = true,
 				float = {
-					focusable = false,
+					focusable = true,
 					style = "minimal",
 					border = "rounded",
-					source = "always",
 					header = "",
 					prefix = "",
 				},
-			},
-		}
-	end,
-	config = function(_, opts)
-		local lspconfig = require("lspconfig")
-		local cmp_lsp = require("cmp_nvim_lsp")
+			})
 
-		-- Apply diagnostic settings
-		vim.diagnostic.config(opts.diagnostics)
+			vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+			vim.lsp.handlers["textDocument/signatureHelp"] =
+				vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
+			require("lspconfig.ui.windows").default_options.border = "rounded"
 
-		local capabilities = vim.tbl_deep_extend(
-			"force",
-			{},
-			vim.lsp.protocol.make_client_capabilities(),
-			cmp_lsp.default_capabilities()
-		)
+			local function common_capabilities()
+				local status_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+				if status_ok then
+					return cmp_nvim_lsp.default_capabilities()
+				end
+				local capabilities = vim.lsp.protocol.make_client_capabilities()
+				capabilities.textDocument.completion.completionItem.snippetSupport = true
+				capabilities.textDocument.completion.completionItem.resolveSupport = {
+					properties = {
+						"documentation",
+						"detail",
+						"additionalTextEdits",
+					},
+				}
+				capabilities.textDocument.foldingRange = {
+					dynamicRegistration = false,
+					lineFoldingOnly = true,
+				}
+				return capabilities
+			end
 
-		require("mason").setup()
-		-- Setup mason-tool-installer
-		require("mason-tool-installer").setup({
-			ensure_installed = {
-				-- LSP
-				"lua_ls",
-				-- Linter
-				"luacheck",
-				-- Formatter
-				"stylua",
-				-- DAP
-				-- Add DAP tools here if needed
-			},
-		})
+			local capabilities = common_capabilities()
 
-		-- Create an autocmd to set up keymaps when an LSP attaches
-		vim.api.nvim_create_autocmd("LspAttach", {
-			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-			callback = function(ev)
-				local client = vim.lsp.get_client_by_id(ev.data.client_id)
-				local bufnr = ev.buf
-				setup_keymaps(client, bufnr)
-			end,
-		})
-
-		require("mason-lspconfig").setup_handlers({
-			function(server_name)
-				lspconfig[server_name].setup({
-					capabilities = capabilities,
-				})
-			end,
-
-			["lua_ls"] = function()
-				lspconfig.lua_ls.setup({
-					capabilities = capabilities,
+			-- LSP servers configuration
+			local servers = {
+				lua_ls = {
 					settings = {
 						Lua = {
-							runtime = { version = "Lua 5.1" },
-							diagnostics = {
-								globals = { "bit", "vim", "it", "describe", "before_each", "after_each" },
+							workspace = { checkThirdParty = false },
+							completion = { callSnippet = "Replace" },
+						},
+					},
+				},
+				pyright = {
+					settings = {
+						python = {
+							analysis = {
+								autoSearchPaths = true,
+								diagnosticMode = "workspace",
+								useLibraryCodeForTypes = true,
+								typeCheckingMode = "basic",
 							},
 						},
 					},
-				})
-			end,
-		})
-	end,
+				},
+				ruff_lsp = {
+					on_attach = function(client, bufnr)
+						-- Disable hover in favor of Pyright
+						client.server_capabilities.hoverProvider = false
+					end,
+				},
+				-- Add other servers here
+			}
+
+			-- LSP attach function
+			vim.api.nvim_create_autocmd("LspAttach", {
+				group = vim.api.nvim_create_augroup("user-lsp-attach", { clear = true }),
+				callback = function(event)
+					local bufnr = event.buf
+					local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+					-- Keymaps
+					vim.keymap.set("n", "<leader>cl", "<cmd>LspInfo<cr>", { desc = "Lsp Info", buffer = bufnr })
+					vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Goto Definition", buffer = bufnr })
+					vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "References", buffer = bufnr })
+					vim.keymap.set(
+						"n",
+						"gI",
+						vim.lsp.buf.implementation,
+						{ desc = "Goto Implementation", buffer = bufnr }
+					)
+					vim.keymap.set(
+						"n",
+						"gy",
+						vim.lsp.buf.type_definition,
+						{ desc = "Goto T[y]pe Definition", buffer = bufnr }
+					)
+					vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Goto Declaration", buffer = bufnr })
+					vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover", buffer = bufnr })
+					vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, { desc = "Signature Help", buffer = bufnr })
+					vim.keymap.set(
+						"i",
+						"<c-k>",
+						vim.lsp.buf.signature_help,
+						{ desc = "Signature Help", buffer = bufnr }
+					)
+					vim.keymap.set(
+						{ "n", "v" },
+						"<leader>ca",
+						vim.lsp.buf.code_action,
+						{ desc = "Code Action", buffer = bufnr }
+					)
+					vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename", buffer = bufnr })
+				end,
+			})
+
+			-- Setup servers
+			local lspconfig = require("lspconfig")
+			local mlsp = require("mason-lspconfig")
+
+			mlsp.setup({
+				ensure_installed = {
+					"lua_ls",
+					"pyright",
+					"ruff_lsp",
+
+					-- Add other LSP servers here
+				},
+				automatic_installation = true,
+			})
+
+			mlsp.setup_handlers({
+				function(server_name)
+					local config = servers[server_name] or {}
+					config.capabilities = capabilities
+					lspconfig[server_name].setup(config)
+				end,
+			})
+		end,
+	},
+
+	-- LazyDev and Luvit
+	{
+		"folke/lazydev.nvim",
+		ft = "lua",
+		opts = {
+			library = {
+				{ path = "luvit-meta/library", words = { "vim%.uv" } },
+			},
+		},
+	},
+	{ "Bilal2453/luvit-meta", lazy = true },
 }

@@ -1,35 +1,35 @@
 return {
-	-- Formatter
-	"stevearc/conform.nvim",
-	dependencies = { "mason.nvim" },
-	lazy = true,
-	cmd = "ConformInfo",
-	keys = {
-		{
-			"<leader>cf",
-			function()
-				require("conform").format({ timeout_ms = 1000 })
-			end,
-			mode = { "n", "v" },
-			desc = "Format Injected Langs",
-		},
-	},
-	opts = function()
-		return {
+	{
+		"stevearc/conform.nvim",
+		dependencies = { "mason.nvim" },
+		lazy = true,
+		cmd = "ConformInfo",
+				opts = {
+			default_format_opts = {
+				timeout_ms = 3000,
+				async = false, -- not recommended to change
+				quiet = false, -- not recommended to change
+				lsp_format = "fallback", -- not recommended to change
+			},
 			formatters_by_ft = {
 				lua = { "stylua" },
-				sh = { "shfmt" },
+				c = { "c_formattter_42" },
+				python = { "ruff_format" },
 			},
-			format_on_save = {
-				timeout_ms = 500,
-				lsp_fallback = true,
+			formatters = {
+				c_formattter_42 = {
+					command = "/Users/joaok/.asdf/installs/python/3.12.4/bin/c_formatter_42",
+					args = {},
+					stdin = true,
+					stdout = true,
+					tempfile_postfix = ".c",
+				},
+				injected = { options = { ignore_errors = true } },
 			},
-		}
-	end,
-	config = function(_, opts)
-		require("conform").setup(opts)
-		require("mason-registry"):on("package:install:success", function()
+		},
+		config = function(_, opts)
 			require("conform").setup(opts)
-		end)
-	end,
+		end,
+	},
 }
+

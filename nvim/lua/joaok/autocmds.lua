@@ -2,7 +2,7 @@ local function augroup(name)
   return vim.api.nvim_create_augroup("joaok_" .. name, { clear = true })
 end
 
--- Highlight on yank
+-- highlight on yank
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup("highlight_yank"),
   callback = function()
@@ -10,7 +10,34 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
--- Close some filetypes with <q>
+-- check if we need to reload the file when it changed
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+  group = augroup("checktime"),
+  callback = function()
+    if vim.o.buftype ~= "nofile" then
+      vim.cmd("checktime")
+    end
+  end,
+})
+
+-- go to the last location when opening a buffer
+vim.api.nvim_create_autocmd("BufReadPost", {
+  group = augroup("last_loc"),
+  callback = function(event)
+    local exclude = { "gitcommit" }
+    local buf = event.buf
+    if vim.tbl_contains(exclude, vim.bo[buf].filetype) then
+      return
+    end
+    local mark = vim.api.nvim_buf_get_mark(buf, '"')
+    local lcount = vim.api.nvim_buf_line_count(buf)
+    if mark[1] > 0 and mark[1] <= lcount then
+      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    end
+  end,
+})
+
+-- close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_with_q"),
   pattern = {
@@ -46,8 +73,9 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Set language-specific colorcolumn based on file type
+-- set language-specific colorcolumn based on file type
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("colorcolumn"),
   callback = function()
     local filetype = vim.bo.filetype
     local col_widths = {
@@ -70,13 +98,4 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Set specific indentation for C-family files
-vim.api.nvim_create_autocmd({"FileType"}, {
-  pattern = {"c", "cpp", "h", "hpp"},
-  callback = function()
-    vim.opt_local.smartindent = true
-    vim.opt_local.expandtab = false
-    vim.opt_local.shiftwidth = 4
-    vim.opt_local.tabstop = 4
-  end,
-})
+
