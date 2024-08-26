@@ -1,28 +1,30 @@
 return {
-
-  -- Treesitter
-  -- Advanced syntax highlighting and code parsing to improve editing and navigation
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = {
-      ensure_installed = {
-        "cmake",
-        "cpp",
-        "css",
-        "dockerfile",
-        "go",
-        "http",
-        "just",
-        "php",
-        "ruby",
-        "rust",
-        "scala",
-        "scss",
-        "sql",
-        "svelte",
-        "vue",
-      },
-      auto_install = true,
-    },
-  },
+  "nvim-treesitter/nvim-treesitter",
+  opts = function(_, opts)
+    -- Add new languages to the ensure_installed list
+    vim.list_extend(opts.ensure_installed, {
+      "cmake",
+      "css",
+      "devicetree",
+      "gitcommit",
+      "gitignore",
+      "glsl",
+      "go",
+      "graphql",
+      "http",
+      "just",
+      "kconfig",
+      "meson",
+      "ninja",
+      "nix",
+      "org",
+      "php",
+      "rst",
+      "scss",
+      "sql",
+      "svelte",
+      "vue",
+      "wgsl",
+    })
+  end,
 }

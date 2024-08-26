@@ -1,6 +1,5 @@
 local M = {}
 
--- Notifies "Hold it Cowboy!" if certain keys are pressed 10 times quickly.
 function M.cowboy()
   ---@type table?
   local id
@@ -34,12 +33,6 @@ function M.cowboy()
       end
     end, { expr = true, silent = true })
   end
-end
-
-function M.customize_lsp_popups()
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
-  require("lspconfig.ui.windows").default_options.border = "rounded"
 end
 
 return M
