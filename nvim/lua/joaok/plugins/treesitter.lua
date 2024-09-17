@@ -5,7 +5,7 @@ return {
 		dependencies = { "nvim-treesitter/nvim-treesitter-textobjects" },
 		version = false,
 		build = ":TSUpdate",
-		event = { "BufReadPre", "BufNewFile" },
+		event = { "BufReadPost", "BufNewFile", "BufWritePre", "VeryLazy" },
 		lazy = vim.fn.argc(-1) == 0,
 		init = function(plugin)
 			require("lazy.core.loader").add_to_rtp(plugin)

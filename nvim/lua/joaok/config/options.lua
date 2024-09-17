@@ -3,19 +3,19 @@ local opt = vim.opt
 -- file and system interaction
 opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- sync with system clipboard
 opt.autowrite = true -- auto-save modified buffers before potentially dangerous commands
-opt.backup = false -- disable backup file creation
-opt.undodir = os.getenv("HOME") .. "/.vim/undodir" -- set undo directory
 opt.undofile = true -- enable persistent undo
+opt.undodir = os.getenv("HOME") .. "/.vim/undodir" -- set undo directory
 
 -- ui and display
 opt.number = true -- show absolute line numbers
 opt.relativenumber = true -- show relative line numbers
 opt.wrap = false -- disable line wrapping
-opt.termguicolors = true -- enable 24-bit rgb colors
-opt.guicursor = "" -- disable fancy gui cursor (use terminal cursor)
 opt.showmode = false -- hide mode display (e.g., -- insert --)
 opt.signcolumn = "yes" -- always show the sign column (for linting/git)
 opt.cursorline = true -- enable highlighting of the current line
+opt.laststatus = 3 -- global statusline
+opt.linebreak = true -- wrap lines at convenient points
+opt.smoothscroll = true -- smooth scrolling
 
 -- search and navigation
 opt.scrolloff = 8 -- keep 8 lines above/below the cursor when scrolling
@@ -23,22 +23,27 @@ opt.ignorecase = true -- case-insensitive search
 opt.smartcase = true -- enable smart case for search
 
 -- editing and indentation
-opt.smartindent = true -- enable smart indentation based on syntax
-opt.expandtab = false -- use spaces instead of tabs
+opt.expandtab = false -- use tabs instead of spaces
 opt.shiftwidth = 2 -- number of spaces to use for each step of (auto)indent
-opt.tabstop = 2 -- number of spaces a <tab> counts for while editing
+opt.tabstop = 2 -- number of spaces a <tab> counts for
 opt.softtabstop = 2 -- number of spaces a <tab> counts for while editing
+opt.formatoptions = "jcroqlnt" -- tcqj
+opt.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
 
--- pop-up menu (completion and diagnostics)
-vim.opt.completeopt = {
-	"menu",
-	"menuone",
-	"noselect",
-} -- always show the menu, don't auto-select
+-- completion and command-line
+opt.wildmode = "longest:full,full" -- command-line completion mode
+opt.completeopt = {"menu", "menuone", "noselect"} -- always show the menu, don't auto-select
 opt.pumheight = 10 -- maximum height of the pop-up menu (in lines)
 opt.pumblend = 10 -- transparency level of the pop-up menu (0-100)
-opt.timeoutlen = 1000 -- time (in ms) to wait for mapped key sequences
-opt.updatetime = 100 -- update interval (in ms) for completion/diagnostics
+opt.timeoutlen = 300 -- time (in ms) to wait for mapped key sequences
+opt.updatetime = 200 -- update interval (in ms) for completion/diagnostics
+
+-- search tools
+opt.grepformat = "%f:%l:%c:%m"
+opt.grepprg = "rg --vimgrep"
+
+-- session options
+opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" }
 
 -- netrw configuration
 vim.g.netrw_browse_split = 0 -- open files in the same window instead of splitting
@@ -51,3 +56,5 @@ vim.g.loaded_perl_provider = 0 -- disable perl provider
 vim.g.loaded_ruby_provider = 0 -- disable ruby provider
 vim.g.loaded_node_provider = 0 -- disable node.js provider
 
+-- fix markdown indentation settings
+vim.g.markdown_recommended_style = 0

@@ -1,5 +1,5 @@
 return {
-	-- Mason and related plugins
+	-- mason
 	{
 		"williamboman/mason.nvim",
 		dependencies = {
@@ -16,25 +16,29 @@ return {
 					package_uninstalled = "✗",
 				},
 			},
+			ensure_installed = {
+				"stylua",
+				"luacheck",
+				-- add other tools here
+			},
 		},
 		config = function(_, opts)
-			require("mason").setup(opts)
+			local mason = require("mason")
+			mason.setup(opts)
 
-			require("mason-tool-installer").setup({
-				ensure_installed = {
-					"luacheck",
-					"stylua",
-					"pyright",
-					"ruff",
-					"ruff-lsp",
-				},
-				auto_update = true,
-				run_on_start = true,
-			})
+			local mr = require("mason-registry")
+			mr.refresh(function()
+				for _, tool in ipairs(opts.ensure_installed) do
+					local p = mr.get_package(tool)
+					if not p:is_installed() then
+						p:install()
+					end
+				end
+			end)
 		end,
 	},
 
-	-- LSP Configuration
+	-- lsp configuration
 	{
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPost", "BufNewFile", "BufWritePre" },
@@ -43,117 +47,169 @@ return {
 			"williamboman/mason-lspconfig.nvim",
 		},
 		config = function()
-			local icons = {
-				Error = " ",
-				Warning = " ",
-				Hint = "󰌶",
-				Information = " ",
-			}
-
-			vim.diagnostic.config({
-				signs = {
-					text = {
-						[vim.diagnostic.severity.ERROR] = icons.Error,
-						[vim.diagnostic.severity.WARN] = icons.Warning,
-						[vim.diagnostic.severity.HINT] = icons.Hint,
-						[vim.diagnostic.severity.INFO] = icons.Information,
+			-- centralized lsp options
+			local opts = {
+				diagnostics = {
+					underline = true,
+					update_in_insert = false,
+					virtual_text = {
+						spacing = 4,
+						source = "if_many",
+						prefix = "●",
+					},
+					severity_sort = true,
+					signs = {
+						text = {
+							[vim.diagnostic.severity.ERROR] = " ",
+							[vim.diagnostic.severity.WARN] = " ",
+							[vim.diagnostic.severity.HINT] = "󰌶 ",
+							[vim.diagnostic.severity.INFO] = " ",
+						},
 					},
 				},
-				virtual_text = true,
-				update_in_insert = false,
-				underline = true,
-				severity_sort = true,
-				float = {
-					focusable = true,
-					style = "minimal",
-					border = "rounded",
-					header = "",
-					prefix = "",
+				inlay_hints = {
+					enabled = false,
+					exclude = {},
 				},
-			})
+				codelens = {
+					enabled = false,
+				},
+				document_highlight = {
+					enabled = false,
+				},
+				capabilities = {},
+				servers = {
+					lua_ls = {
+						settings = {
+							Lua = {
+								workspace = { checkThirdParty = false },
+								completion = { callSnippet = "Replace" },
+								hint = {
+									enable = true,
+									setType = false,
+									paramType = true,
+									paramName = "Disable",
+									semicolon = "Disable",
+									arrayIndex = "Disable",
+								},
+							},
+						},
+					},
+					-- add other servers here
+				},
+			}
 
+			-- diagnostic signs
+			for type, icon in pairs(opts.diagnostics.signs.text) do
+				local hl = "DiagnosticSign" .. type
+				vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+			end
+
+			vim.diagnostic.config(opts.diagnostics)
+
+			-- capabilities
+			local capabilities = vim.lsp.protocol.make_client_capabilities()
+			local ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+			if ok then
+				capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+			end
+			capabilities.workspace = {
+				fileOperations = {
+					didRename = true,
+					willRename = true,
+				},
+			}
+			capabilities.textDocument.foldingRange = {
+				dynamicRegistration = false,
+				lineFoldingOnly = true,
+			}
+			opts.capabilities = capabilities
+
+			-- lsp handlers
 			vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
 			vim.lsp.handlers["textDocument/signatureHelp"] =
 				vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
 			require("lspconfig.ui.windows").default_options.border = "rounded"
 
-			local function common_capabilities()
-				local status_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-				if status_ok then
-					return cmp_nvim_lsp.default_capabilities()
+			-- inlay hints and code lens
+			if vim.fn.has("nvim-0.10.0") == 1 then
+				-- inlay hints
+				if opts.inlay_hints.enabled then
+					vim.api.nvim_create_autocmd("LspAttach", {
+						group = vim.api.nvim_create_augroup("LspInlayHints", {}),
+						callback = function(args)
+							local client = vim.lsp.get_client_by_id(args.data.client_id)
+							local bufnr = args.buf
+							if
+								client.server_capabilities.inlayHintProvider
+								and not vim.tbl_contains(opts.inlay_hints.exclude, vim.bo[bufnr].filetype)
+							then
+								vim.lsp.inlay_hint(bufnr, true)
+							end
+						end,
+					})
 				end
-				local capabilities = vim.lsp.protocol.make_client_capabilities()
-				capabilities.textDocument.completion.completionItem.snippetSupport = true
-				capabilities.textDocument.completion.completionItem.resolveSupport = {
-					properties = {
-						"documentation",
-						"detail",
-						"additionalTextEdits",
-					},
-				}
-				capabilities.textDocument.foldingRange = {
-					dynamicRegistration = false,
-					lineFoldingOnly = true,
-				}
-				return capabilities
+
+				-- code lens
+				if opts.codelens.enabled then
+					vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+						group = vim.api.nvim_create_augroup("LspCodeLens", {}),
+						callback = function()
+							vim.lsp.codelens.refresh()
+						end,
+					})
+				end
 			end
 
-			local capabilities = common_capabilities()
-
-			-- LSP servers configuration
-			local servers = {
-				lua_ls = {
-					settings = {
-						Lua = {
-							workspace = { checkThirdParty = false },
-							completion = { callSnippet = "Replace" },
-						},
-					},
-				},
-				pyright = {
-					settings = {
-						python = {
-							analysis = {
-								autoSearchPaths = true,
-								diagnosticMode = "workspace",
-								useLibraryCodeForTypes = true,
-								typeCheckingMode = "basic",
-							},
-						},
-					},
-				},
-				ruff_lsp = {
-					on_attach = function(client, bufnr)
-						-- Disable hover in favor of Pyright
-						client.server_capabilities.hoverProvider = false
+			-- document highlighting
+			if opts.document_highlight.enabled then
+				vim.api.nvim_create_autocmd("LspAttach", {
+					group = vim.api.nvim_create_augroup("LspDocumentHighlight", {}),
+					callback = function(args)
+						local client = vim.lsp.get_client_by_id(args.data.client_id)
+						if client.server_capabilities.documentHighlightProvider then
+							local bufnr = args.buf
+							vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+								group = vim.api.nvim_create_augroup("LspDocumentHighlight", { clear = true }),
+								buffer = bufnr,
+								callback = vim.lsp.buf.document_highlight,
+							})
+							vim.api.nvim_create_autocmd("CursorMoved", {
+								group = vim.api.nvim_create_augroup("LspDocumentHighlightClear", { clear = true }),
+								buffer = bufnr,
+								callback = vim.lsp.buf.clear_references,
+							})
+						end
 					end,
-				},
-				-- Add other servers here
-			}
+				})
+			end
 
-			-- LSP attach function
+			-- lsp attach function
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("user-lsp-attach", { clear = true }),
 				callback = function(event)
 					local bufnr = event.buf
-					local client = vim.lsp.get_client_by_id(event.data.client_id)
 
-					-- Keymaps
-					vim.keymap.set("n", "<leader>cl", "<cmd>LspInfo<cr>", { desc = "Lsp Info", buffer = bufnr })
-					vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Goto Definition", buffer = bufnr })
-					vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "References", buffer = bufnr })
+					-- keymaps
+					local telescope = require("telescope.builtin")
+					vim.keymap.set("n", "gd", function()
+						telescope.lsp_definitions({ reuse_win = true })
+					end, { desc = "Goto Definition", buffer = bufnr })
 					vim.keymap.set(
 						"n",
-						"gI",
-						vim.lsp.buf.implementation,
-						{ desc = "Goto Implementation", buffer = bufnr }
+						"gr",
+						"<cmd>Telescope lsp_references<cr>",
+						{ desc = "References", buffer = bufnr }
 					)
-					vim.keymap.set(
-						"n",
-						"gy",
-						vim.lsp.buf.type_definition,
-						{ desc = "Goto T[y]pe Definition", buffer = bufnr }
-					)
+					vim.keymap.set("n", "gI", function()
+						telescope.lsp_implementations({ reuse_win = true })
+					end, { desc = "Goto Implementation", buffer = bufnr })
+					vim.keymap.set("n", "gy", function()
+						telescope.lsp_type_definitions({ reuse_win = true })
+					end, { desc = "Goto Type Definition", buffer = bufnr })
+
+					-- other lsp keymaps
+					vim.keymap.set("n", "<leader>cl", "<cmd>LspInfo<cr>", { desc = "LSP Info", buffer = bufnr })
 					vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Goto Declaration", buffer = bufnr })
 					vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover", buffer = bufnr })
 					vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, { desc = "Signature Help", buffer = bufnr })
@@ -173,40 +229,31 @@ return {
 				end,
 			})
 
-			-- Setup servers
+			-- setup servers
 			local lspconfig = require("lspconfig")
 			local mlsp = require("mason-lspconfig")
 
-			mlsp.setup({
-				ensure_installed = {
-					"lua_ls",
-					"pyright",
-					"ruff_lsp",
+			local servers = opts.servers
+			local ensure_installed = {}
 
-					-- Add other LSP servers here
-				},
+			for server, _ in pairs(servers) do
+				ensure_installed[#ensure_installed + 1] = server
+			end
+
+			-- setup mason-lspconfig
+			mlsp.setup({
+				ensure_installed = ensure_installed,
 				automatic_installation = true,
 			})
 
+			-- setup servers
 			mlsp.setup_handlers({
 				function(server_name)
-					local config = servers[server_name] or {}
-					config.capabilities = capabilities
-					lspconfig[server_name].setup(config)
+					local server_opts = servers[server_name] or {}
+					server_opts.capabilities = opts.capabilities
+					require("lspconfig")[server_name].setup(server_opts)
 				end,
 			})
 		end,
 	},
-
-	-- LazyDev and Luvit
-	{
-		"folke/lazydev.nvim",
-		ft = "lua",
-		opts = {
-			library = {
-				{ path = "luvit-meta/library", words = { "vim%.uv" } },
-			},
-		},
-	},
-	{ "Bilal2453/luvit-meta", lazy = true },
 }
