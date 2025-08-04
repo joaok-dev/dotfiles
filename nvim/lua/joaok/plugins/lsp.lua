@@ -2,6 +2,7 @@ return {
 	-- mason
 	{
 		"williamboman/mason.nvim",
+		version = "^1.0.0",
 		dependencies = {
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
 		},
@@ -19,6 +20,8 @@ return {
 			ensure_installed = {
 				"stylua",
 				"luacheck",
+				"ruff",
+        "prettier", 
 				-- add other tools here
 			},
 		},
@@ -44,7 +47,7 @@ return {
 		event = { "BufReadPost", "BufNewFile", "BufWritePre" },
 		dependencies = {
 			{ "j-hui/fidget.nvim", opts = {} },
-			"williamboman/mason-lspconfig.nvim",
+			{ "williamboman/mason-lspconfig.nvim", version = "^1.0.0" },
 		},
 		config = function()
 			-- centralized lsp options
@@ -95,6 +98,28 @@ return {
 							},
 						},
 					},
+					ruff = {
+            init_options = {
+              settings = {
+                logLevel = "error", -- Reduce log noise
+                lint = { enable = true },
+                format = { enable = true },
+              },
+            },
+            on_attach = function(client, bufnr)
+              -- Use Ruff for formatting
+              if client.server_capabilities.documentFormattingProvider then
+                vim.api.nvim_create_autocmd("BufWritePre", {
+                  group = vim.api.nvim_create_augroup("RuffFormat", { clear = true }),
+                  buffer = bufnr,
+                  callback = function()
+                    vim.lsp.buf.format({ id = client.id, async = false })
+                  end,
+                })
+              end
+            end,
+          },
+
 					-- add other servers here
 				},
 			}
